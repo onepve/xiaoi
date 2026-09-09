@@ -26,7 +26,8 @@ const HELP_TEXT = `
   xiaoi                     启动交互式界面（TUI）
   xiaoi tts <文字> [--did <did>]     发送语音通知（可指定目标音箱）
   xiaoi audio <url> [--did <did>]    播放音频链接（可指定目标音箱）
-  xiaoi volume <0-100> [--did <did>] 设置音箱音量（可指定目标音箱）
+  xiaoi volume [0-100] [--did <did>] 设置或查看音箱音量（无参数为读取）
+  xiaoi get-volume [--did <did>]     读取当前音箱音量
   xiaoi command <siid> <aiid> [paramsJson] [--did <did>] 发送 MiOT 指令
   xiaoi getprop <siid> <piid> [--did <did>] 读取 MiOT 属性值
   xiaoi status              检查连接状态
@@ -424,15 +425,29 @@ xiaoi pm2 用法:
             }
 
             case "volume": {
+                if (!cliArgs[0] || cliArgs[0] === "get") {
+                    console.log("🔊 正在读取当前音量...");
+                    const currentVolume = await speaker.getVolume(targetOpts);
+                    console.log(`✅ 当前音量: ${currentVolume}`);
+                    break;
+                }
                 const volume = parseInt(cliArgs[0]);
                 if (isNaN(volume) || volume < 0 || volume > 100) {
-                    console.error("❌ 音量值必须为 0-100 的整数");
-                    console.error("  用法: xiaoi volume <0-100> [--did <did>]");
+                    console.error("❌ 音量值必须为 0-100 的整数，或留空查询音量");
+                    console.error("  用法: xiaoi volume [0-100] [--did <did>]");
                     process.exit(1);
                 }
                 console.log(`🔊 设置音量: ${volume}`);
                 await speaker.setVolume(volume, targetOpts);
                 console.log("✅ 音量已设置");
+                break;
+            }
+
+            case "getvolume":
+            case "get-volume": {
+                console.log("🔊 正在读取当前音量...");
+                const currentVolume = await speaker.getVolume(targetOpts);
+                console.log(`✅ 当前音量: ${currentVolume}`);
                 break;
             }
 
